@@ -156,6 +156,17 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Manager
             };
         }
 
+        public async Task<IEnumerable<Client>> GetClientsAsync(GetClientsParam param, CancellationToken cancellationToken)
+        {
+            var config = await GetConfigurationAsync(param.Authority, cancellationToken);
+            if (config == null)
+            {
+                throw new Exception("Authority " + param.Authority + " not found");
+            }
+
+            return config.Clients.ToArray();
+        }
+
     }
 
 }
