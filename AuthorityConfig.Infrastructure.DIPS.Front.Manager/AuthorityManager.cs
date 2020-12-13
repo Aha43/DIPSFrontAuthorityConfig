@@ -47,7 +47,7 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Manager
             await _authorityRepository.SetConfigurationAsync(dao, cancellationToken);
         }
 
-        public async Task<object> GetConfigurationAsync(GetConfigParam param, CancellationToken cancellationToken)
+        public async Task<object> GetConfigurationAsync(AuthorityParam param, CancellationToken cancellationToken)
         {
             return await GetConfigurationAsync(param.Authority, cancellationToken);
         }
@@ -156,7 +156,7 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Manager
             };
         }
 
-        public async Task<IEnumerable<Client>> GetClientsAsync(GetClientsParam param, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Client>> GetClientsAsync(AuthorityParam param, CancellationToken cancellationToken)
         {
             var config = await GetConfigurationAsync(param.Authority, cancellationToken);
             if (config == null)
@@ -165,6 +165,17 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Manager
             }
 
             return config.Clients.ToArray();
+        }
+
+        public async Task<IEnumerable<ApiScope>> GetApiScopesAsync(AuthorityParam param, CancellationToken cancellationToken)
+        {
+            var config = await GetConfigurationAsync(param.Authority, cancellationToken);
+            if (config == null)
+            {
+                throw new Exception("Authority " + param.Authority + " not found");
+            }
+
+            return config.Apis.ToArray();
         }
 
     }
