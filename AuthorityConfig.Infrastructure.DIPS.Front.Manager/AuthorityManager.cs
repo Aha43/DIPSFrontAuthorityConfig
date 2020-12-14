@@ -10,6 +10,7 @@ using AuthorityConfig.Specification.Repository.Dao;
 using System.Linq;
 using IdentityServer4.Models;
 using System.Collections.Generic;
+using AuthorityConfig.Domain.Exceptions;
 
 namespace AuthorityConfig.Infrastructure.DIPS.Front.Manager
 {
@@ -70,7 +71,7 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Manager
             var config = await GetConfigurationAsync(param.Authority, cancellationToken);
             if (config == null)
             {
-                throw new Exception("Authority " + param.Authority + " not found");
+                throw new AuthorityDoesNotExists(param.Authority);
             }
 
             var client = GetClient(config, param);
@@ -111,18 +112,18 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Manager
         }
         #endregion
 
-        public async Task AddApiAsync(AddApiParam param, CancellationToken cancellationToken)
+        public async Task AddApiScopeAsync(AddApiParam param, CancellationToken cancellationToken)
         {
             var config = await GetConfigurationAsync(param.Authority, cancellationToken);
             if (config == null)
             {
-                throw new Exception("Authority " + param.Authority + " not found");
+                throw new AuthorityDoesNotExists(param.Authority);
             }
 
             var api = config.Apis == null ? null : config.Apis.Where(a => a.Name.Equals(param.Name)).FirstOrDefault();
             if (api != null)
             {
-                throw new Exception("Api exists");
+                throw new ApiScopeExistsException(param.Name);
             }
 
             api = new ApiScope
@@ -161,7 +162,7 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Manager
             var config = await GetConfigurationAsync(param.Authority, cancellationToken);
             if (config == null)
             {
-                throw new Exception("Authority " + param.Authority + " not found");
+                throw new AuthorityDoesNotExists(param.Authority);
             }
 
             return config.Clients.ToArray();
@@ -172,7 +173,7 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Manager
             var config = await GetConfigurationAsync(param.Authority, cancellationToken);
             if (config == null)
             {
-                throw new Exception("Authority " + param.Authority + " not found");
+                throw new AuthorityDoesNotExists(param.Authority);
             }
 
             return config.Apis.ToArray();
