@@ -16,7 +16,7 @@
     <ProjectReference Include="..\..\AuthorityConfig\AuthorityConfig.Api\AuthorityConfig.Api.csproj" />
     <ProjectReference Include="..\..\AuthorityConfig\AuthorityConfig.Domain\AuthorityConfig.Domain.csproj" />
     <ProjectReference Include="..\..\AuthorityConfig\AuthorityConfig.Specification\AuthorityConfig.Specification.csproj" />
-    <ProjectReference Include="..\AuthorityConfig.Infrastructure.DIPS.Front.Manager\AuthorityConfig.Infrastructure.DIPS.Front.Manager.csproj" />
+    <ProjectReference Include="..\AuthorityConfig.Infrastructure.DIPS.Front.Manager\AuthorityConfig.Infrastructure.DIPS.Front.Managers.csproj" />
   </ItemGroup>
 
 </Project>

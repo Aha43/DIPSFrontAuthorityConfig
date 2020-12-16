@@ -1,7 +1,7 @@
 ﻿using IdentityServer4.Models;
 using System.Collections.Generic;
 
-namespace AuthorityConfig.Infrastructure.DIPS.Front.Manager
+namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers.Domain
 {
     public class IdserverConfig
     {

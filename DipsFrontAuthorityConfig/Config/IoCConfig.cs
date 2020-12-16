@@ -1,5 +1,5 @@
 ﻿using AuthorityConfig.Infrastructure.AuthorityRepository.Sql.Config;
-using AuthorityConfig.Infrastructure.DIPS.Front.Manager.Config;
+using AuthorityConfig.Infrastructure.DIPS.Front.Managers.Config;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,7 +12,5 @@ namespace DipsFrontAuthorityConfig.Config
             return services.ConfigureSqlAuthorityRepository(configuration)
                 .ConfigureManagerServices();
         }
-
     }
-
 }

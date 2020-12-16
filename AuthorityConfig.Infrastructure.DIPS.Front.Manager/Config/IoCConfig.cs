@@ -1,15 +1,15 @@
 ﻿using AuthorityConfig.Specification.Business;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AuthorityConfig.Infrastructure.DIPS.Front.Manager.Config
+namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers.Config
 {
     public static class IoCConfig
     {
-        public static IServiceCollection ConfigureManagerServices(this IServiceCollection serviceCollection)
+        public static IServiceCollection ConfigureManagerServices(this IServiceCollection services)
         {
-            return serviceCollection.AddSingleton<IAuthorityManager, AuthorityManager>();
+            return services.AddSingleton<IAuthorityManager, AuthorityManager>()
+                .AddSingleton<IClientManager, ClientManager>()
+                .AddSingleton<IApiScopeManager, ApiScopeManager>();
         }
-
     }
-
 }
