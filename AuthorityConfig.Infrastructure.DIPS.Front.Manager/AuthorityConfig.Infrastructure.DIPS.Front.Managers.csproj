@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\AuthorityConfig\AuthorityConfig.Specification\AuthorityConfig.Specification.csproj" />
+    <ProjectReference Include="..\..\AuthorityConfig\AuthorityConfig.Utility\AuthorityConfig.Utility.csproj" />
   </ItemGroup>
 
 </Project>

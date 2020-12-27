@@ -1,14 +1,18 @@
 ﻿using AuthorityConfig.Domain.Exceptions;
+using AuthorityConfig.Domain.Oidc;
 using AuthorityConfig.Domain.Param;
+using AuthorityConfig.Domain.Response;
 using AuthorityConfig.Infrastructure.DIPS.Front.Managers.Domain;
 using AuthorityConfig.Specification.Business;
 using AuthorityConfig.Specification.Repository;
+using AuthorityConfig.Utility;
 using IdentityServer4.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using static AuthorityConfig.Domain.Oidc.OidcConstants;
 
 namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers
 {
@@ -21,57 +25,147 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers
             var config = await GetConfigurationAsync(param.Authority, cancellationToken);
             if (config == null)
             {
-                throw new AuthorityDoesNotExists(param.Authority);
+                throw new AuthorityDoesNotExistsException(param.Authority);
             }
 
             return config.Clients.ToArray();
         }
 
-        public async Task SetClientAsync(SetClientParam param, CancellationToken cancellationToken)
+        public async Task<ClientResponse> SetClientAsync(SetClientParam param, CancellationToken cancellationToken)
         {
             var config = await GetConfigurationAsync(param.Authority, cancellationToken);
             if (config == null)
             {
-                throw new AuthorityDoesNotExists(param.Authority);
+                throw new AuthorityDoesNotExistsException(param.Authority);
             }
 
-            var client = GetClient(config, param);
+            var retVal = GetClient(config, param);
 
-            AddScopes(client, param);
-            // ToDo: More modificators
+            SetProperties(retVal.Client, param);
+            SetClientSecret(retVal, param);
+
+            retVal.Client.AllowedScopes = retVal.Client.AllowedScopes.UnionWithTokens(param.ScopesToAdd);
+            retVal.Client.AllowedScopes = retVal.Client.AllowedScopes.RemoveTokens(param.ScopesToRemove);
+
+            retVal.Client.AllowedGrantTypes = retVal.Client.AllowedGrantTypes.UnionWithTokens(param.GrantTypesToAdd);
+            retVal.Client.AllowedGrantTypes = retVal.Client.AllowedGrantTypes.RemoveTokens(param.GrantTypesToRemove);
+            if (retVal.Client.AllowedGrantTypes.Count == 0)
+            {
+                throw new NoAllowedGrantsGivenException();
+            }
 
             await SetConfigurationAsync(authority: param.Authority, config: config, cancellationToken: cancellationToken);
-        }
-
-        #region set_client_support
-        private Client GetClient(IdserverConfig config, SetClientParam param)
-        {
-            var retVal = config.Clients.Where(c => c.ClientId.Equals(param.ClientId)).FirstOrDefault();
-            if (retVal == null)
-            {
-                return CreateClient(config, param);
-            }
 
             return retVal;
         }
 
-        private Client CreateClient(IdserverConfig config, SetClientParam param)
+        private static ClientResponse GetClient(IdserverConfig config, SetClientParam param)
         {
-            throw new NotImplementedException("not yet...");
+            var client = config.Clients.Where(c => c.ClientId.Equals(param.ClientId)).FirstOrDefault();
+            if (client == null)
+            {
+                if (param.CreateIfDoesNotExists)
+                {
+                    var retVal = CreateClient(config, param);
+                    config.Clients = config.Clients.Extend(retVal.Client);
+                    return retVal;
+                }
+                else
+                {
+                    throw new ClientDoesNotExistsException(param.ClientId);
+                }
+            }
+            
+            return new ClientResponse
+            {
+                Client = client
+            };
         }
 
-        private void AddScopes(Client client, SetClientParam param)
+        private static ClientResponse CreateClient(IdserverConfig config, SetClientParam param)
         {
-            var scopesToAdd = param.ScopesToAdd;
-            if (!string.IsNullOrWhiteSpace(scopesToAdd))
+            if (!string.IsNullOrWhiteSpace(param.GrantTypesToRemove))
             {
-                var scopesToAddSet = new HashSet<string>(scopesToAdd.Split(' '));
-                var existingScopes = new HashSet<string>(client.AllowedScopes == null ? new string[] { } : client.AllowedScopes);
-                var newScopes = existingScopes.Union(scopesToAddSet);
-                client.AllowedScopes = newScopes.ToArray();
+                throw new InvalidParamException("Grant types to remove given when client do not exists and is to be created");
+            }
+            if (!string.IsNullOrWhiteSpace(param.ScopesToRemove))
+            {
+                throw new InvalidParamException("Scopes to remove given when client do not exists and is to be created");
+            }
+            if (string.IsNullOrWhiteSpace(param.GrantTypesToAdd))
+            {
+                throw new InvalidParamException("No grant types to add given when client do not exists and is to be created");
+            }
+
+            try
+            {
+                var client = new Client()
+                {
+                    ClientId = param.ClientId,
+                    ProtocolType = Protocol.Name
+                };
+
+                return new ClientResponse
+                {
+                    Created = true,
+                    Client = client
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new FailedToCreateClientException(ex);
             }
         }
-        #endregion
+
+        private static void SetClientSecret(ClientResponse clientResponse, SetClientParam param)
+        {
+            var client = clientResponse.Client;
+
+            Secret clientSecret = null;
+
+            if (!string.IsNullOrEmpty(param.ClientSecret))
+            {
+                clientSecret = new Secret
+                {
+                    Value = param.ClientSecret.Sha256()
+                };
+
+                clientResponse.Secret = param.ClientSecret;
+            }
+            else if (clientResponse.Client.RequireClientSecret)
+            {
+                var (plain, hash) = SecretGenerator.GenerateSharedSecret();
+                clientSecret = new Secret
+                {
+                    Type = "SharedSecret",
+                    Value = hash,
+                    Description = "SharedSecret for client " + (client.ClientName ?? client.ClientId)
+                };
+
+                clientResponse.Secret = plain;
+            }
+
+            if (clientSecret != null)
+            {
+                clientSecret.Type = "SharedSecret";
+                clientSecret.Description = "SharedSecret for client " + (client.ClientName ?? client.ClientId);
+
+                if (client.ClientSecrets == null) client.ClientSecrets = new List<Secret>();
+                client.ClientSecrets.Add(clientSecret);
+            }
+        }
+
+        private static void SetProperties(Client client, SetClientParam param)
+        {
+            if (!string.IsNullOrEmpty(param.ClientName)) client.ClientName = param.ClientName;
+            if (!string.IsNullOrEmpty(param.Description)) client.Description = param.Description;
+            if (!string.IsNullOrEmpty(param.ClientUri)) client.ClientUri = param.ClientUri;
+            if (!string.IsNullOrEmpty(param.LogoUri)) client.LogoUri = param.LogoUri;
+            if (param.Enabled != null) client.Enabled = param.Enabled.Value;
+            if (param.RequireClientSecret != null) client.RequireClientSecret = param.RequireClientSecret.Value;
+            if (param.RequireConsent != null) client.RequireConsent = param.RequireConsent.Value; // research
+            if (param.AllowRememberConsent != null) client.AllowRememberConsent = param.AllowRememberConsent.Value; // research
+        }
 
     }
 

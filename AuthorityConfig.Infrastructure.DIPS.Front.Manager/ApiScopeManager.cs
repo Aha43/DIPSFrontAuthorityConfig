@@ -19,7 +19,7 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers
             var config = await GetConfigurationAsync(param.Authority, cancellationToken);
             if (config == null)
             {
-                throw new AuthorityDoesNotExists(param.Authority);
+                throw new AuthorityDoesNotExistsException(param.Authority);
             }
 
             return config.Apis.ToArray();
@@ -30,7 +30,7 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers
             var config = await GetConfigurationAsync(param.Authority, cancellationToken);
             if (config == null)
             {
-                throw new AuthorityDoesNotExists(param.Authority);
+                throw new AuthorityDoesNotExistsException(param.Authority);
             }
 
             var api = config.Apis == null ? null : config.Apis.Where(a => a.Name.Equals(param.Name)).FirstOrDefault();
