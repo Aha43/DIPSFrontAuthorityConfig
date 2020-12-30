@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthorityConfig.Infrastructure.DIPS.Front.Managers", "AuthorityConfig.Infrastructure.DIPS.Front.Manager\AuthorityConfig.Infrastructure.DIPS.Front.Managers.csproj", "{07114DFD-1862-4554-8013-9534831185E4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthorityConfig.Infrastructure.Default.Managers", "AuthorityConfig.Infrastructure.DIPS.Front.Manager\AuthorityConfig.Infrastructure.Default.Managers.csproj", "{07114DFD-1862-4554-8013-9534831185E4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DipsFrontAuthorityConfig", "DipsFrontAuthorityConfig\DipsFrontAuthorityConfig.csproj", "{F7E4A74E-8693-405D-AD86-ABE12FF4276A}"
 EndProject

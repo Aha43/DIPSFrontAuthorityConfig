@@ -6,25 +6,30 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers
+namespace AuthorityConfig.Infrastructure.Default.Managers
 {
-    public class ApiScopeManager : BaseManager, IApiScopeManager
+    public class ApiScopeManager : IApiScopeManager
     {
-        public ApiScopeManager(IAuthorityRepository authorityRepository) : base(authorityRepository) { }
+        private readonly IAuthorityRepository _repository;
+
+        public ApiScopeManager(IAuthorityRepository repository)
+        {
+            _repository = repository;
+        }
 
         public async Task<ApiScope> GetApiScopeAsync(GatApiScopeParam param, CancellationToken cancellationToken)
         {
-            return await _authorityRepository.GetApiScopeAsync(param, cancellationToken);
+            return await _repository.GetApiScopeAsync(param, cancellationToken);
         }
 
         public async Task<IEnumerable<ApiScope>> GetApiScopesAsync(AuthorityParam param, CancellationToken cancellationToken)
         {
-            return await _authorityRepository.GetApiScopesAsync(param, cancellationToken);
+            return await _repository.GetApiScopesAsync(param, cancellationToken);
         }
 
         public async Task SetApiScopeAsync(SetApiParam param, CancellationToken cancellationToken)
         {
-            var apiScope = await _authorityRepository.GetApiScopeAsync(new GatApiScopeParam
+            var apiScope = await _repository.GetApiScopeAsync(new GatApiScopeParam
             {
                 Authority = param.Authority,
                 Name = param.Name
@@ -41,7 +46,7 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers
 
             if (!string.IsNullOrEmpty(param.DisplayName)) apiScope.DisplayName = param.DisplayName;
 
-            await _authorityRepository.SetApiScopeAsync(apiScope, param, cancellationToken);
+            await _repository.SetApiScopeAsync(apiScope, param, cancellationToken);
         }
 
     }

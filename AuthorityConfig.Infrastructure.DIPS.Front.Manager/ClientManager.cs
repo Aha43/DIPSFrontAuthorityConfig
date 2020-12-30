@@ -1,28 +1,30 @@
 ﻿using AuthorityConfig.Domain.Exceptions;
-using AuthorityConfig.Domain.Oidc;
 using AuthorityConfig.Domain.Param;
 using AuthorityConfig.Domain.Response;
-using AuthorityConfig.Infrastructure.DIPS.Front.Managers.Domain;
 using AuthorityConfig.Specification.Business;
 using AuthorityConfig.Specification.Repository;
 using AuthorityConfig.Utility;
 using IdentityServer4.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using static AuthorityConfig.Domain.Oidc.OidcConstants;
 
-namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers
+namespace AuthorityConfig.Infrastructure.Default.Managers
 {
-    public class ClientManager : BaseManager, IClientManager
+    public class ClientManager : IClientManager
     {
-        public ClientManager(IAuthorityRepository authorityRepository) : base(authorityRepository) { }
+        private readonly IAuthorityRepository _repository;
+
+        public ClientManager(IAuthorityRepository repository)
+        {
+            _repository = repository;
+        }
 
         public async Task<IEnumerable<Client>> GetClientsAsync(AuthorityParam param, CancellationToken cancellationToken)
         {
-            return await _authorityRepository.GetClientsAsync(param, cancellationToken);
+            return await _repository.GetClientsAsync(param, cancellationToken);
         }
 
         public async Task<ClientResponse> SetClientAsync(SetClientParam param, CancellationToken cancellationToken)
@@ -42,14 +44,14 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers
                 throw new NoAllowedGrantsGivenException();
             }
 
-            await _authorityRepository.SetClientAsync(retVal.Client, param, cancellationToken);
+            await _repository.SetClientAsync(retVal.Client, param, cancellationToken);
 
             return retVal;
         }
 
         private async Task<ClientResponse> GetClientAsync(SetClientParam param, CancellationToken cancellationToken)
         {
-            var client = await _authorityRepository.GetClientAsync(new GetClientParam { Authority = param.Authority, ClientId = param.ClientId }, cancellationToken);
+            var client = await _repository.GetClientAsync(new GetClientParam { Authority = param.Authority, ClientId = param.ClientId }, cancellationToken);
 
             if (client == null)
             {

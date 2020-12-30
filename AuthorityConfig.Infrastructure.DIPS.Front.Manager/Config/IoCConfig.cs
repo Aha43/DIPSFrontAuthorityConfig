@@ -1,7 +1,7 @@
 ﻿using AuthorityConfig.Specification.Business;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers.Config
+namespace AuthorityConfig.Infrastructure.Default.Managers.Config
 {
     public static class IoCConfig
     {
