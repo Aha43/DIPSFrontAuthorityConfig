@@ -22,24 +22,12 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers
 
         public async Task<IEnumerable<Client>> GetClientsAsync(AuthorityParam param, CancellationToken cancellationToken)
         {
-            var config = await GetConfigurationAsync(param.Authority, cancellationToken);
-            if (config == null)
-            {
-                throw new AuthorityDoesNotExistsException(param.Authority);
-            }
-
-            return config.Clients.ToArray();
+            return await _authorityRepository.GetClientsAsync(param, cancellationToken);
         }
 
         public async Task<ClientResponse> SetClientAsync(SetClientParam param, CancellationToken cancellationToken)
         {
-            var config = await GetConfigurationAsync(param.Authority, cancellationToken);
-            if (config == null)
-            {
-                throw new AuthorityDoesNotExistsException(param.Authority);
-            }
-
-            var retVal = GetClient(config, param);
+            var retVal = await GetClientAsync(param, cancellationToken);
 
             SetProperties(retVal.Client, param);
             SetClientSecret(retVal, param);
@@ -54,20 +42,20 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers
                 throw new NoAllowedGrantsGivenException();
             }
 
-            await SetConfigurationAsync(authority: param.Authority, config: config, cancellationToken: cancellationToken);
+            await _authorityRepository.SetClientAsync(retVal.Client, param, cancellationToken);
 
             return retVal;
         }
 
-        private static ClientResponse GetClient(IdserverConfig config, SetClientParam param)
+        private async Task<ClientResponse> GetClientAsync(SetClientParam param, CancellationToken cancellationToken)
         {
-            var client = config.Clients.Where(c => c.ClientId.Equals(param.ClientId)).FirstOrDefault();
+            var client = await _authorityRepository.GetClientAsync(new GetClientParam { Authority = param.Authority, ClientId = param.ClientId }, cancellationToken);
+
             if (client == null)
             {
                 if (param.CreateIfDoesNotExists)
                 {
-                    var retVal = CreateClient(config, param);
-                    config.Clients = config.Clients.Extend(retVal.Client);
+                    var retVal = CreateClient(param);
                     return retVal;
                 }
                 else
@@ -82,7 +70,7 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers
             };
         }
 
-        private static ClientResponse CreateClient(IdserverConfig config, SetClientParam param)
+        private static ClientResponse CreateClient(SetClientParam param)
         {
             if (!string.IsNullOrWhiteSpace(param.GrantTypesToRemove))
             {

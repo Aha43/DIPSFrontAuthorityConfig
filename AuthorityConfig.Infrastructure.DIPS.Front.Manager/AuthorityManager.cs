@@ -19,48 +19,33 @@ namespace AuthorityConfig.Infrastructure.DIPS.Front.Managers
     {
         public AuthorityManager(IAuthorityRepository authorityRepository) : base(authorityRepository) { }
 
-        
-
         public async Task<object> GetConfigurationAsync(AuthorityParam param, CancellationToken cancellationToken)
         {
-            return await GetConfigurationAsync(param.Authority, cancellationToken);
+            return await _authorityRepository.GetConfigurationAsync(param, cancellationToken);
         }
 
         public async Task SetConfigurationAsync(SetConfigParam param, CancellationToken cancellationToken)
         {
-            var dao = new AuthorityDao
-            {
-                Authority = param.Authority,
-                Json = JsonSerializer.Serialize(param.Config),
-                Uri = param.Uri,
-                Description = param.Description
-            };
+            //var dao = new AuthorityDao
+            //{
+            //    Authority = param.Authority,
+            //    Json = JsonSerializer.Serialize(param.Config),
+            //    Uri = param.Uri,
+            //    Description = param.Description
+            //};
 
-            await _authorityRepository.SetConfigurationAsync(dao, cancellationToken);
+            await _authorityRepository.SetConfigurationAsync(param, cancellationToken);
         }
-
-        
 
         public async Task<Authorities> GetAuthoritiesAsync(CancellationToken cancellationToken)
         {
-            var names = await _authorityRepository.GetAuthorityNames(cancellationToken);
-            return new Authorities { Names = names };
+            return await _authorityRepository.GetAuthoritiesAsync(cancellationToken);
         }
 
         public async Task<Authority> GetAuthorityAsync(GetAuthorityParam param, CancellationToken cancellationToken)
         {
-            var stored = await _authorityRepository.GetConfigurationAsync(param.Authority, cancellationToken);
-            return new Authority
-            {
-                Description = stored.Description,
-                Name = stored.Authority,
-                Uri = stored.Uri
-            };
+            return await _authorityRepository.GetAuthorityAsync(param, cancellationToken);
         }
-
-        
-
-        
 
     }
 
