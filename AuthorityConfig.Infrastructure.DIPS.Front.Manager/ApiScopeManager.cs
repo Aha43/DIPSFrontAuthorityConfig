@@ -1,4 +1,5 @@
 ﻿using AuthorityConfig.Domain.Param;
+using AuthorityConfig.Domain.Response;
 using AuthorityConfig.Specification.Business;
 using AuthorityConfig.Specification.Repository;
 using IdentityServer4.Models;
@@ -27,8 +28,10 @@ namespace AuthorityConfig.Infrastructure.Default.Managers
             return await _repository.GetApiScopesAsync(param, cancellationToken);
         }
 
-        public async Task SetApiScopeAsync(SetApiParam param, CancellationToken cancellationToken)
+        public async Task<SetApiScopeResponse> SetApiScopeAsync(SetApiParam param, CancellationToken cancellationToken)
         {
+            var retVal = new SetApiScopeResponse();
+
             var apiScope = await _repository.GetApiScopeAsync(new GatApiScopeParam
             {
                 Authority = param.Authority,
@@ -42,11 +45,17 @@ namespace AuthorityConfig.Infrastructure.Default.Managers
                     Name = param.Name,
                     DisplayName = param.Name // ensure got display name if not set from param
                 };
+
+                retVal.Created = true;
             }
 
             if (!string.IsNullOrEmpty(param.DisplayName)) apiScope.DisplayName = param.DisplayName;
+            
+            if (!param.DryRun) await _repository.SetApiScopeAsync(apiScope, param, cancellationToken);
 
-            await _repository.SetApiScopeAsync(apiScope, param, cancellationToken);
+            retVal.ApiScope = apiScope;
+            retVal.DryRun = param.DryRun;
+            return retVal;
         }
 
     }

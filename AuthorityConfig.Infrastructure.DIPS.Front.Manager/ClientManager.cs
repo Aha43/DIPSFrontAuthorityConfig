@@ -27,7 +27,7 @@ namespace AuthorityConfig.Infrastructure.Default.Managers
             return await _repository.GetClientsAsync(param, cancellationToken);
         }
 
-        public async Task<ClientResponse> SetClientAsync(SetClientParam param, CancellationToken cancellationToken)
+        public async Task<SetClientResponse> SetClientAsync(SetClientParam param, CancellationToken cancellationToken)
         {
             var retVal = await GetClientAsync(param, cancellationToken);
 
@@ -44,12 +44,13 @@ namespace AuthorityConfig.Infrastructure.Default.Managers
                 throw new NoAllowedGrantsGivenException();
             }
 
-            await _repository.SetClientAsync(retVal.Client, param, cancellationToken);
+            if (!param.DryRun) await _repository.SetClientAsync(retVal.Client, param, cancellationToken);
 
+            retVal.DryRun = param.DryRun;
             return retVal;
         }
 
-        private async Task<ClientResponse> GetClientAsync(SetClientParam param, CancellationToken cancellationToken)
+        private async Task<SetClientResponse> GetClientAsync(SetClientParam param, CancellationToken cancellationToken)
         {
             var client = await _repository.GetClientAsync(new GetClientParam { Authority = param.Authority, ClientId = param.ClientId }, cancellationToken);
 
@@ -66,13 +67,13 @@ namespace AuthorityConfig.Infrastructure.Default.Managers
                 }
             }
             
-            return new ClientResponse
+            return new SetClientResponse
             {
                 Client = client
             };
         }
 
-        private static ClientResponse CreateClient(SetClientParam param)
+        private static SetClientResponse CreateClient(SetClientParam param)
         {
             if (!string.IsNullOrWhiteSpace(param.GrantTypesToRemove))
             {
@@ -95,7 +96,7 @@ namespace AuthorityConfig.Infrastructure.Default.Managers
                     ProtocolType = Protocol.Name
                 };
 
-                return new ClientResponse
+                return new SetClientResponse
                 {
                     Created = true,
                     Client = client
@@ -107,7 +108,7 @@ namespace AuthorityConfig.Infrastructure.Default.Managers
             }
         }
 
-        private static void SetClientSecret(ClientResponse clientResponse, SetClientParam param)
+        private static void SetClientSecret(SetClientResponse clientResponse, SetClientParam param)
         {
             var client = clientResponse.Client;
 
